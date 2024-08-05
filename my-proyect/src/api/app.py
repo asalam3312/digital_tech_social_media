@@ -3,6 +3,7 @@ from flask_bcrypt import Bcrypt  # para encriptar y comparar
 from flask import Flask, request, jsonify # Para endpoints
 from flask_sqlalchemy import SQLAlchemy  # Para rutas
 from flask_jwt_extended import  JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_cors import CORS
 
 app = Flask(__name__)
 
@@ -119,4 +120,3 @@ def show_users():
 #al final ( detecta que encendimos el servidor desde terminal y nos da detalles de los errores )
 if __name__ == '__main__':
     app.run(debug=True)
-    
