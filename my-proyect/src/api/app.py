@@ -4,6 +4,9 @@ from flask import Flask, request, jsonify # Para endpoints
 from flask_sqlalchemy import SQLAlchemy  # Para rutas
 from flask_jwt_extended import  JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS
+from sqlalchemy import Enum
+from enum import Enum as PyEnum
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 
@@ -22,12 +25,60 @@ db = SQLAlchemy(app)
 
 print(f"Ruta de la base de datos: {db_path}")
 
+class StatusEnum(PyEnum):
+    drafted = "drafted"
+    deleted = "deleted"
+    published = "published"
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
-    email = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(255))
+    name = db.Column(db.String(50), nullable=False)
+    surname = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    avatar = db.Column(db.String(900))
+    username = db.Column(db.String(20), nullable=False)
+    posts = db.relationship('Post', back_populates='author')
+    liked_posts = db.relationship('Post', secondary='post_likes', back_populates='likes')
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'surname': self.surname,
+            'email': self.email,
+            'avatar': self.avatar,
+            'username': self.username
+        }
+
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.String(500), nullable=False)
+    image = db.Column(db.String(900))
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    author = db.relationship('User', back_populates='posts')
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    location = db.Column(db.String(30), nullable=False)
+    status = db.Column(Enum(StatusEnum), nullable=False)
+    likes = db.relationship('User', secondary='post_likes', back_populates='liked_posts')
+
+    def to_dict(self):
+        return{
+            'id': self.id,
+            'message': self.message,
+            'image': self.image,
+            'author_id': self.author_id,
+            'created_at': self.created_at,
+            'location': self.location,
+            'status': self.status,
+            'likes': self.likes
+        }
+
+class PostLikes(db.Model):
+    __tablename__ = 'post_likes'
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+ 
 if not os.path.exists(os.path.dirname(db_path)): # Nos aseguramos que se cree carpeta instance automatico para poder tener mydatabase.db dentro.
     os.makedirs(os.path.dirname(db_path))
 
@@ -48,9 +99,12 @@ def create_user():
     try:
         email = request.json.get('email')
         password = request.json.get('password')
+        name = request.json.get('name')
+        surname = request.json.get('surname')
+        username = request.json.get('username')
 
-        if not email or not password:
-            return jsonify({'error': 'Email and password are required.'}), 400
+        if not email or not password or not name or not surname or not username:
+            return jsonify({'error': 'Email, password, name, surname and username are required.'}), 400
 
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
@@ -113,7 +167,7 @@ def show_users():
     else:
         return {"Error": "Token inválido o no proporcionado"}, 401
 
-# ------------------------------------------------------------------------------------------------                     
+# --------------------------------------obtener los usuarios existentes----------------------------------------------------------                     
 
 
 
