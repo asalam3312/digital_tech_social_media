@@ -1,16 +1,12 @@
 const getState = ({ getStore, getActions, setStore }) => {
   return {
     store: {
-      personas: ["Pedro", "Maria"],
       registerStatus: false,
       loginStatus: false,
+      postStatus: false
     },
     actions: {
 
-      exampleFunction: () => {
-        console.log("hola")
-        return
-      },
       register: async (name, surname, username, email, password) => {
         try {
           const data = {
@@ -91,7 +87,30 @@ const getState = ({ getStore, getActions, setStore }) => {
         } catch (error) {
           console.error("Error:", error);
         }
+      },
+    postCard: async (message, image, author_id, author, created_at, location, status) => {
+      try {
+          const response = await fetch('http://127.0.0.1:5000/Post', {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ message, image, author_id, author, created_at, location, status })
+          });
+  
+          const statusCode = response.status;
+          const responseData = await response.json();
+  
+          if (statusCode === 201) {
+              setStore({ ...getStore(), postStatus: true });
+          }
+          return responseData;
+      } catch (e) {
+          console.error("error", "error in:", e);
+          return { error: "An error occurred while posting the card." };
       }
+  },
+  
     }
   };
 };
