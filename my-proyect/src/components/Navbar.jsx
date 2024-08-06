@@ -12,6 +12,7 @@ const Navbar = () => {
         <button className="btn btn-outline-success" type="submit"><Link to="/">Sign In</Link></button>
         <button className="btn btn-outline-success" type="submit"><Link to="/LogIn">Log in</Link></button>
         <button>another button</button>
+        <button>another else button</button>
       </form>
     </div>
   </div>
