@@ -1,23 +1,24 @@
-import React, { useContext, useState } from 'react'
-import { Context } from '../js/store/appContext'
-import { useNavigate } from 'react-router'
+import React, { useContext, useState } from 'react';
+import { Context } from '../js/store/appContext';
+import { useNavigate } from 'react-router';
+import '../../src/cssFile.css'; // Asegúrate de que este archivo incluya los estilos necesarios
 
 const LogIn = () => {
-    const { actions } = useContext(Context)
-    const navigate = useNavigate()
-    
+    const { actions } = useContext(Context);
+    const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
         email: '',
         password: ''
-    })
+    });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
-    }
+    };
 
     const handleLogin = async (e) => {
-        e.preventDefault(); 
+        e.preventDefault();
         const { email, password } = formData;
         const response = await actions.login(email, password);
 
@@ -30,32 +31,41 @@ const LogIn = () => {
     };
 
     return (
-        <form onSubmit={handleLogin}>
-            <div className="mb-3">
-                <label htmlFor="email" className="form-label">Email address</label>
-                <input 
-                    type="email" 
-                    className="form-control" 
-                    id="email" 
-                    name="email"
-                    aria-describedby="emailHelp" 
-                    value={formData.email} 
-                    onChange={handleChange} />
-                <div id="emailHelp" className="form-text">We'll never share your email with anyone else.</div>
+        <div className='login-container'>
+            <div className='login-card'>
+                <h2 className='login-title'>Log In</h2>
+                <form onSubmit={handleLogin}>
+                    <div className="input-group">
+                        <label htmlFor="email" className="input-label">Email address</label>
+                        <input 
+                            type="email" 
+                            className="input-field" 
+                            id="email" 
+                            name="email"
+                            aria-describedby="emailHelp" 
+                            value={formData.email} 
+                            onChange={handleChange} 
+                            placeholder="Enter your email"
+                        />
+                        <small id="emailHelp" className="form-text">We'll never share your email with anyone else.</small>
+                    </div>
+                    <div className="input-group">
+                        <label htmlFor="password" className="input-label">Password</label>
+                        <input 
+                            type="password" 
+                            className="input-field" 
+                            id="password" 
+                            name="password"
+                            value={formData.password} 
+                            onChange={handleChange} 
+                            placeholder="Enter your password"
+                        />
+                    </div>
+                    <button type="submit" className="btn btn-primary">Log In</button>
+                </form>
             </div>
-            <div className="mb-3">
-                <label htmlFor="password" className="form-label">Password</label>
-                <input 
-                    type="password" 
-                    className="form-control" 
-                    id="password" 
-                    name="password"
-                    value={formData.password} 
-                    onChange={handleChange} />
-            </div>
-            <button type="submit" className="btn btn-primary">Submit</button>
-        </form>
-    )
-}
+        </div>
+    );
+};
 
-export default LogIn
+export default LogIn;
