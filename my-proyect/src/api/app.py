@@ -58,9 +58,9 @@ class User(db.Model):
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    message = db.Column(db.String(500), nullable=False)
+    message = db.Column(db.String(500), nullable=False) 
     image = db.Column(db.String(900))
-    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', back_populates='posts')
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     location = db.Column(db.String(30), nullable=False)
@@ -97,11 +97,11 @@ with app.app_context():
 @app.route('/')
 def hello():
     return '¡Hola, mundo!'
-# ---------------------------EJEMPLO RUTA DE REGISTRO---------------------------
+# ---------------------------RUTA DE REGISTRO---------------------------
 @app.route('/users', methods=['POST'])
 def create_user():
     try:
-        print("entra en ruta")
+        
         name = request.json.get('name')
         surname = request.json.get('surname')
         username = request.json.get('username')
@@ -109,7 +109,7 @@ def create_user():
         password = request.json.get('password')
         
 
-        print("datos bien:", email, password, name, surname, username)
+        
         if not email or not password or not name or not surname or not username:
             return jsonify({'error': 'Email, password, name, surname and username are required.'}), 400
 
@@ -134,7 +134,55 @@ def create_user():
         print("Error in user creation:", e)
         return jsonify({'error': 'Error in user creation: ' + str(e)}), 500
 
-# ---------------------------EJEMPLO RUTA GENERADORA DE TOKEN---------------------------
+# ---------------------------RUTA GENERADORA DE TOKEN---------------------------
+@app.route('/Post', methods=['POST'])
+def new_post():
+    try:
+        message = request.json.get('message')
+        image = request.json.get('image')
+        author_id = request.json.get('author_id')  # Asegúrate de que el JSON tenga 'author_id'
+        created_at = request.json.get('created_at')
+        location = request.json.get('location')
+        status = request.json.get('status')
+
+        if not message or not author_id or not created_at or not location or not status:
+            return jsonify({'error': 'Message, author_id, created_at, location, and status are required.'}), 400
+
+        # Verificar si el author_id corresponde a un usuario existente
+        author = User.query.get(author_id)
+        if not author:
+            return jsonify({'error': 'Author not found.'}), 404
+
+        # Convertir el string `created_at` a datetime
+        try:
+            created_at = datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%S')  # Usa el formato ISO 8601
+        except ValueError:
+            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DDTHH:MM:SS.'}), 400
+
+        # Verificar que el status esté en el enum
+        try:
+            status_enum = StatusEnum[status]  # Asegúrate de que status sea una cadena válida
+        except KeyError:
+            return jsonify({'error': 'Invalid status value.'}), 400
+
+        # Crear el nuevo post
+        new_post = Post(
+            message=message,
+            image=image,
+            author_id=author_id,
+            created_at=created_at,
+            location=location,
+            status=status_enum
+        )
+        
+        db.session.add(new_post)
+        db.session.commit()
+
+        return jsonify({'message': 'Post created successfully.'}), 201
+
+    except Exception as e:
+        return jsonify({'error': 'Error creating post: ' + str(e)}), 500
+
 
 @app.route('/token', methods=['POST'])
 def get_token():
@@ -161,7 +209,7 @@ def get_token():
     except Exception as e:
         return {"Error":"Email not found: " + str(e)}, 500
 
-# ------------------------------EJEMPLO RUTA RESTRINGIDA POR TOKEN-------------------------------
+# ------------------------------RUTA RESTRINGIDA POR TOKEN-------------------------------
 
 
 @app.route('/users')
@@ -181,8 +229,20 @@ def show_users():
     else:
         return {"Error": "Token inválido o no proporcionado"}, 401
 
-# --------------------------------------obtener los usuarios existentes----------------------------------------------------------                     
+# --------------------------------------Ruta Detalles del Usuario----------------------------------------------------------                     
+@app.route('/user-details', methods=['GET'])
+@jwt_required()
+def get_user_details():
+    try:
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        return jsonify(user.to_dict()), 200
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 #al final ( detecta que encendimos el servidor desde terminal y nos da detalles de los errores )
