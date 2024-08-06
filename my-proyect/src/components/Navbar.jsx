@@ -9,7 +9,7 @@ const Navbar = () => {
     
     <div className="collapse navbar-collapse" id="navbarSupportedContent">
       <form className="d-flex">
-        <button className="btn btn-outline-success" type="submit"><Link to="/SignIn">Sign In</Link></button>
+        <button className="btn btn-outline-success" type="submit"><Link to="/">Sign In</Link></button>
         <button className="btn btn-outline-success" type="submit"><Link to="/LogIn">Log in</Link></button>
       </form>
     </div>

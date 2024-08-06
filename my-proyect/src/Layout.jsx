@@ -5,8 +5,8 @@ import Contact from './views/Contact.jsx'
 import NotFound from './views/NotFound.jsx'
 import Navbar from './components/Navbar.jsx'
 import injectContext from "./js/store/appContext";
-import SignIn from './views/SignIn.jsx';
 import LogIn from './views/LogIn.jsx';
+import LoginRegister from './views/LoginRegister.jsx';
 
 const Layout = () => {
 
@@ -17,10 +17,11 @@ const Layout = () => {
         <BrowserRouter basename={basename}>
             <Navbar/>
             <Routes>
-                <Route exact path="/" element={<Home/>}/>
+                <Route exact path="/Home" element={<Home/>}/>
                 <Route exact path="/contact" element={<Contact/>}/>
-                <Route exact path="/SignIn" element={<SignIn/>}/>
-                <Route exact path="/LogIn" element={<LogIn/>}/>
+                <Route exact path="/" element={<LoginRegister/>}/>
+                <Route exact path="/Login" element={<LogIn/>}/>
+                <Route exact path="/token" element={<LogIn/>}/>
                 <Route exact path="/*" element={<NotFound/>}/>
             </Routes>
         </BrowserRouter>

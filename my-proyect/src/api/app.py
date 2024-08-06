@@ -9,7 +9,7 @@ from enum import Enum as PyEnum
 from datetime import datetime, timezone
 
 app = Flask(__name__)
-
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True) 
 
 # ENCRIPTACION JWT y BCRYPT-------
 
@@ -20,6 +20,9 @@ bcrypt = Bcrypt(app)   # para encriptar password
 # DATABASE---------------
 db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance', 'mydatabase.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 
 db = SQLAlchemy(app)
 
@@ -36,7 +39,7 @@ class User(db.Model):
     surname = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    avatar = db.Column(db.String(900))
+    avatar = db.Column(db.String(900), nullable=True)
     username = db.Column(db.String(20), nullable=False)
     posts = db.relationship('Post', back_populates='author')
     liked_posts = db.relationship('Post', secondary='post_likes', back_populates='likes')
@@ -46,9 +49,11 @@ class User(db.Model):
             'id': self.id,
             'name': self.name,
             'surname': self.surname,
+            'username': self.username,
             'email': self.email,
-            'avatar': self.avatar,
-            'username': self.username
+            'password': '',
+            'avatar': self.avatar
+            
         }
 
 class Post(db.Model):
@@ -93,16 +98,18 @@ with app.app_context():
 def hello():
     return '¡Hola, mundo!'
 # ---------------------------EJEMPLO RUTA DE REGISTRO---------------------------
-
 @app.route('/users', methods=['POST'])
 def create_user():
     try:
-        email = request.json.get('email')
-        password = request.json.get('password')
+        print("entra en ruta")
         name = request.json.get('name')
         surname = request.json.get('surname')
         username = request.json.get('username')
+        email = request.json.get('email')
+        password = request.json.get('password')
+        
 
+        print("datos bien:", email, password, name, surname, username)
         if not email or not password or not name or not surname or not username:
             return jsonify({'error': 'Email, password, name, surname and username are required.'}), 400
 
@@ -111,13 +118,20 @@ def create_user():
             return jsonify({'error': 'Email already exists.'}), 409
 
         password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-        new_user = User(email=email, password=password_hash)
-        db.session.add(new_user)
-        db.session.commit()
+        new_user = User(name=name,surname=surname,username=username, email=email, password=password_hash   )
+        
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            print("User added successfully")
+        except Exception as commit_error:
+            print("Error committing to the database:", commit_error)
+            return jsonify({'error': 'Error committing to the database: ' + str(commit_error)}), 500
 
         return jsonify({'message': 'User created successfully.'}), 201
 
     except Exception as e:
+        print("Error in user creation:", e)
         return jsonify({'error': 'Error in user creation: ' + str(e)}), 500
 
 # ---------------------------EJEMPLO RUTA GENERADORA DE TOKEN---------------------------
@@ -145,7 +159,7 @@ def get_token():
             return {"Error":"Contraseña  incorrecta"}
     
     except Exception as e:
-        return {"Error":"El email proporcionado no corresponde a ninguno registrado: " + str(e)}, 500
+        return {"Error":"Email not found: " + str(e)}, 500
 
 # ------------------------------EJEMPLO RUTA RESTRINGIDA POR TOKEN-------------------------------
 
@@ -174,4 +188,4 @@ def show_users():
 #al final ( detecta que encendimos el servidor desde terminal y nos da detalles de los errores )
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
-    CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)    #si genera error ponerla en la mitad de las dos de arriba
+      #si genera error ponerla en la mitad de las dos de arriba
