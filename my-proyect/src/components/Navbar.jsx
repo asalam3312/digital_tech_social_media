@@ -11,8 +11,7 @@ const Navbar = () => {
       <form className="d-flex">
         <button className="btn btn-outline-success" type="submit"><Link to="/">Sign In</Link></button>
         <button className="btn btn-outline-success" type="submit"><Link to="/LogIn">Log in</Link></button>
-        <button>another button</button>
-        <button>another else button</button>
+        <p>last test</p>
       </form>
     </div>
   </div>
