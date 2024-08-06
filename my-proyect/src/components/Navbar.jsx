@@ -5,7 +5,7 @@ const Navbar = () => {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
   <div className="container-fluid">
-    <div className="navbar-brand"><Link to="/">Cool Media</Link></div>
+    <div className="navbar-brand"><Link to="/Home">Digital_tech</Link></div>
     
     <div className="collapse navbar-collapse" id="navbarSupportedContent">
       <form className="d-flex">
