@@ -135,55 +135,6 @@ def create_user():
         return jsonify({'error': 'Error in user creation: ' + str(e)}), 500
 
 # ---------------------------RUTA GENERADORA DE TOKEN---------------------------
-@app.route('/Post', methods=['POST'])
-def new_post():
-    try:
-        message = request.json.get('message')
-        image = request.json.get('image')
-        author_id = request.json.get('author_id')  # Asegúrate de que el JSON tenga 'author_id'
-        created_at = request.json.get('created_at')
-        location = request.json.get('location')
-        status = request.json.get('status')
-
-        if not message or not author_id or not created_at or not location or not status:
-            return jsonify({'error': 'Message, author_id, created_at, location, and status are required.'}), 400
-
-        # Verificar si el author_id corresponde a un usuario existente
-        author = User.query.get(author_id)
-        if not author:
-            return jsonify({'error': 'Author not found.'}), 404
-
-        # Convertir el string `created_at` a datetime
-        try:
-            created_at = datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%S')  # Usa el formato ISO 8601
-        except ValueError:
-            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DDTHH:MM:SS.'}), 400
-
-        # Verificar que el status esté en el enum
-        try:
-            status_enum = StatusEnum[status]  # Asegúrate de que status sea una cadena válida
-        except KeyError:
-            return jsonify({'error': 'Invalid status value.'}), 400
-
-        # Crear el nuevo post
-        new_post = Post(
-            message=message,
-            image=image,
-            author_id=author_id,
-            created_at=created_at,
-            location=location,
-            status=status_enum
-        )
-        
-        db.session.add(new_post)
-        db.session.commit()
-
-        return jsonify({'message': 'Post created successfully.'}), 201
-
-    except Exception as e:
-        return jsonify({'error': 'Error creating post: ' + str(e)}), 500
-
-
 @app.route('/token', methods=['POST'])
 def get_token():
     try:
@@ -228,6 +179,18 @@ def show_users():
         return jsonify(user_list)
     else:
         return {"Error": "Token inválido o no proporcionado"}, 401
+    
+
+# ------------------------------RUTA Información de los Usuarios-------------------------------
+@app.route('/usersInfo', methods=['GET'])
+def get_users():
+    try:
+        users = User.query.all()  # Obtener todos los usuarios de la base de datos
+        users_list = [user.to_dict() for user in users]  # Convertir cada usuario a diccionario
+        return jsonify(users_list), 200  # Devolver la lista de usuarios como JSON
+    except Exception as e:
+        return jsonify({'error': 'Error fetching users: ' + str(e)}), 500
+    
 
 # --------------------------------------Ruta Detalles del Usuario----------------------------------------------------------                     
 @app.route('/user-details', methods=['GET'])
@@ -244,6 +207,56 @@ def get_user_details():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ------------------------------RUTA POSTEO DE POSTS------------------------------
+@app.route('/Post', methods=['POST'])
+def new_post():
+    try:
+        message = request.json.get('message')
+        image = request.json.get('image')
+        author_id = request.json.get('author_id')   # debo hacer que los dos autores se obtengan de manera automatica
+        author = request.json.get('author')
+        created_at = request.json.get('created_at')
+        location = request.json.get('location')
+        status = request.json.get('status')
+
+        if not message or not author_id or not author or not created_at or not location or not status:
+            return jsonify({'error': 'Message, author_id, created_at, location, and status are required.'}), 400
+
+        # Verificar si el author_id corresponde a un usuario existente
+        authorNumber = User.query.get(author_id)
+        if not authorNumber:
+            return jsonify({'error': 'Author not found.'}), 404
+
+        # Convertir el string `created_at` a datetime
+        try:
+            created_at = datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%S')  # formato ISO 8601
+        except ValueError:
+            return jsonify({'error': 'Invalid date format. Use YYYY-MM-DDTHH:MM:SS.'}), 400
+
+        # Verificar que el status esté en el enum
+        try:
+            status_enum = StatusEnum[status] 
+        except KeyError:
+            return jsonify({'error': 'Invalid status value.'}), 400
+
+        
+        new_post = Post(
+            message=message,
+            image=image,
+            author_id=author_id,
+            created_at=created_at,
+            location=location,
+            status=status_enum      # Solo es posible pasarle uno de los valores dados en class StatusEnum(PyEnum)
+        )
+        
+        db.session.add(new_post)
+        db.session.commit()
+
+        return jsonify({'message': 'Post created successfully.'}), 201
+
+    except Exception as e:
+        return jsonify({'error': 'Error creating post: ' + str(e)}), 500
+    
 
 #al final ( detecta que encendimos el servidor desde terminal y nos da detalles de los errores )
 if __name__ == '__main__':

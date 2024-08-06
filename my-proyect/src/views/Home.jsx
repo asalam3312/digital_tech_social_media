@@ -1,12 +1,23 @@
-import React, { useContext, useEffect } from 'react'
-import { Context } from '../js/store/appContext'
+import React, { useContext, useEffect, useState } from 'react';
+import { Context } from '../js/store/appContext';
+import { useNavigate } from 'react-router';
 
 const Home = () => {
     const { store, actions } = useContext(Context);
+    const [isUserDetailsFetched, setIsUserDetailsFetched] = useState(false);
 
     useEffect(() => {
-        actions.getUserDetails();
-    }, [actions]);
+        if (!isUserDetailsFetched) {
+            actions.getUserDetails();
+            setIsUserDetailsFetched(true);
+        }
+    }, [isUserDetailsFetched, actions]);
+
+    const navigate = useNavigate();
+
+    const handlePostIt = () => {
+        navigate('/PostIt');
+    };
 
     return (
         <div>
@@ -20,8 +31,10 @@ const Home = () => {
             ) : (
                 <p>Loading...</p>
             )}
+            <button onClick={handlePostIt}>Post?</button>
         </div>
-    )
-}
+    );
+};
 
-export default Home
+export default Home;
+
